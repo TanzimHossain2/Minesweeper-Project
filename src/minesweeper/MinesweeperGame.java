@@ -188,17 +188,38 @@ public class MinesweeperGame extends JFrame {
         // You can customize this method based on your needs.
     }
 
+
+    private class CellClickListener extends MouseAdapter {
+        private int i;
+        private int j;
+    
+        public CellClickListener(int i, int j) {
+            this.i = i;
+            this.j = j;
+        }
+    
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (SwingUtilities.isRightMouseButton(e)) {
+                markMine(i, j);
+            } else if (SwingUtilities.isLeftMouseButton(e)) {
+                uncoverCell(i, j);
+            }
+        }
+    }
+    
+
     // private class CellClickListener extends MouseAdapter {
     //     private int i;
     //     private int j;
-    
+
     //     public CellClickListener(int i, int j) {
     //         this.i = i;
     //         this.j = j;
     //     }
-    
+
     //     @Override
-    //     public void mousePressed(java.awt.event.MouseEvent e) {
+    //     public void mousePressed(MouseEvent e) {
     //         if (SwingUtilities.isRightMouseButton(e)) {
     //             markMine(i, j);
     //         } else {
@@ -206,44 +227,6 @@ public class MinesweeperGame extends JFrame {
     //         }
     //     }
     // }
-
-    // private class CellClickListener implements ActionListener {
-    //     private int i;
-    //     private int j;
-    
-    //     public CellClickListener(int i, int j) {
-    //         this.i = i;
-    //         this.j = j;
-    //     }
-    
-    //     @Override
-    //     public void actionPerformed(ActionEvent e) {
-    //         if (SwingUtilities.isRightMouseButton((MouseEvent) e)) {
-    //             markMine(i, j);
-    //         } else {
-    //             uncoverCell(i, j);
-    //         }
-    //     }
-    // }
-
-    private class CellClickListener extends MouseAdapter {
-        private int i;
-        private int j;
-
-        public CellClickListener(int i, int j) {
-            this.i = i;
-            this.j = j;
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            if (SwingUtilities.isRightMouseButton(e)) {
-                markMine(i, j);
-            } else {
-                uncoverCell(i, j);
-            }
-        }
-    }
     
     
 
