@@ -5,9 +5,14 @@ import javax.sound.sampled.Clip;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.util.Random;
 import javax.swing.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseEvent;
 import java.io.File;
+
+
 
 
 
@@ -46,7 +51,7 @@ public class MinesweeperGame extends JFrame {
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLS; j++) {
                 buttons[i][j] = new JButton();
-                buttons[i][j].addActionListener(new CellClickListener(i, j));
+                buttons[i][j].addMouseListener(new CellClickListener(i, j));
                 add(buttons[i][j]);
             }
         }
@@ -113,10 +118,10 @@ public class MinesweeperGame extends JFrame {
         if (!buttons[i][j].isEnabled()) {
             return;  // cell already uncovered or flagged
         }
-
+    
         buttons[i][j].setEnabled(false);
         uncoveredCells++;
-
+    
         if (mines[i][j]) {
             explodeMine(i, j);
         } else {
@@ -126,12 +131,29 @@ public class MinesweeperGame extends JFrame {
                 // Auto-uncover adjacent cells if the current cell has no surrounding mines
                 for (int x = Math.max(0, i - 1); x <= Math.min(ROWS - 1, i + 1); x++) {
                     for (int y = Math.max(0, j - 1); y <= Math.min(COLS - 1, j + 1); y++) {
-                        uncoverCell(x, y);
+                        if (x != i || y != j) {  // skip the current cell
+                            uncoverCell(x, y);
+                        }
                     }
                 }
             } else {
                 buttons[i][j].setText(Integer.toString(surroundingMines[i][j]));
             }
+        }
+    }
+    
+    
+    
+    
+    
+
+    private void markMine(int i, int j) {
+        if (buttons[i][j].getText().equals("M")) {
+            // Erase mine marking
+            buttons[i][j].setText("");
+        } else {
+            // Mark as mine
+            buttons[i][j].setText("M");
         }
     }
 
@@ -166,7 +188,45 @@ public class MinesweeperGame extends JFrame {
         // You can customize this method based on your needs.
     }
 
-    private class CellClickListener implements ActionListener {
+    // private class CellClickListener extends MouseAdapter {
+    //     private int i;
+    //     private int j;
+    
+    //     public CellClickListener(int i, int j) {
+    //         this.i = i;
+    //         this.j = j;
+    //     }
+    
+    //     @Override
+    //     public void mousePressed(java.awt.event.MouseEvent e) {
+    //         if (SwingUtilities.isRightMouseButton(e)) {
+    //             markMine(i, j);
+    //         } else {
+    //             uncoverCell(i, j);
+    //         }
+    //     }
+    // }
+
+    // private class CellClickListener implements ActionListener {
+    //     private int i;
+    //     private int j;
+    
+    //     public CellClickListener(int i, int j) {
+    //         this.i = i;
+    //         this.j = j;
+    //     }
+    
+    //     @Override
+    //     public void actionPerformed(ActionEvent e) {
+    //         if (SwingUtilities.isRightMouseButton((MouseEvent) e)) {
+    //             markMine(i, j);
+    //         } else {
+    //             uncoverCell(i, j);
+    //         }
+    //     }
+    // }
+
+    private class CellClickListener extends MouseAdapter {
         private int i;
         private int j;
 
@@ -175,10 +235,18 @@ public class MinesweeperGame extends JFrame {
             this.j = j;
         }
 
-        public void actionPerformed(ActionEvent e) {
-            uncoverCell(i, j);
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (SwingUtilities.isRightMouseButton(e)) {
+                markMine(i, j);
+            } else {
+                uncoverCell(i, j);
+            }
         }
     }
+    
+    
+
 
     private class TimerListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
