@@ -1,5 +1,8 @@
-package minesweeper;
+import javax.swing.*;
 
-public class MinesweeperGame {
-    
+public class MinesweeperGame extends JFrame {
+
+    public MinesweeperGame() {
+        System.out.println("MinesweeperGame constructor called");
+    }
 }

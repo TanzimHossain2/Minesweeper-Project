@@ -1,5 +1,3 @@
-package minesweeper;
-
 public class Board {
-    
+    // ... (rest of the code)
 }
