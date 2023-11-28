@@ -2,10 +2,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 public class MinesweeperGame extends JFrame {
     private JButton[][] buttons;
@@ -18,10 +15,14 @@ public class MinesweeperGame extends JFrame {
     private final int COLS = 9;
     private final int MINES = 11;
 
+    // Timer variables
+    private Timer timer;
+    private int secondsPlayed;
+
     public MinesweeperGame() {
         setTitle("Minesweeper");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        
+
         // Adjust the layout based on the Beginner level board size
         setLayout(new GridLayout(ROWS, COLS));
 
@@ -40,6 +41,13 @@ public class MinesweeperGame extends JFrame {
 
         placeMines();
         countSurroundingMines();
+
+        // Initialize timer
+        timer = new Timer(1000, new TimerListener());
+        secondsPlayed = 0;
+
+        // Start the timer
+        timer.start();
 
         pack();
         setVisible(true);
@@ -97,4 +105,24 @@ public class MinesweeperGame extends JFrame {
             uncoverCell(i, j);
         }
     }
+
+    // Timer listener
+    private class TimerListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            secondsPlayed++;
+
+            // Check if the timer exceeds 60 seconds (1 minute) for the Beginner level
+            if (secondsPlayed >= 60) {
+                timer.stop();
+                endGame(false); 
+            }
+        }
+    }
+
+    // Method to end the game
+    private void endGame(boolean win) {
+        // ... (code to handle game ending, display messages, etc.)
+    }
+
+    // ... (rest of the code)
 }
