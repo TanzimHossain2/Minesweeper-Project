@@ -1,17 +1,14 @@
+import javax.swing.*;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
-import java.util.Random;
-import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.Random;
 
 public class MinesweeperGame extends JFrame {
     private JButton[][] buttons;
@@ -20,9 +17,10 @@ public class MinesweeperGame extends JFrame {
     private int uncoveredCells;
     private int totalMines;
     private JLabel timerLabel;
-    private JLabel scoreLabel;  // Added score label
+    private JLabel scoreLabel;
     private int correctlyMarkedMines;
-    private static final int BUTTON_SIZE = 30; 
+    private static final int BUTTON_SIZE = 25;
+    private boolean gameEnded = false;
 
     // Board sizes and number of mines for each level
     public static final int BEGINNER_ROWS = 6;
@@ -43,11 +41,16 @@ public class MinesweeperGame extends JFrame {
 
     // Sound effect for exploding mines
     private final String EXPLOSION_SOUND_PATH = "../resources/explosion_sound.wav";
+    private final String EXPLOSION_ICONE = "💣";
     private Clip explosionSound;
 
     public MinesweeperGame(int rows, int cols, int mines) {
         setTitle("Minesweeper");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        // Display the board size and number of mines
+        JLabel levelLabel = new JLabel(String.format("Level: %s | Size: %dx%d | Mines: %d", getLevelName(), rows, cols, mines));
+        add(levelLabel, BorderLayout.WEST);
 
         // Adjust the layout based on the selected board size
         setLayout(new BorderLayout());
@@ -110,6 +113,19 @@ public class MinesweeperGame extends JFrame {
         correctlyMarkedMines = 0;
     }
 
+    private String getLevelName() {
+        switch (totalMines) {
+            case BEGINNER_MINES:
+                return "Beginner";
+            case INTERMEDIATE_MINES:
+                return "Intermediate";
+            case ADVANCED_MINES:
+                return "Advanced";
+            default:
+                return "Unknown";
+        }
+    }
+
     private void placeMines(int mines) {
         Random random = new Random();
         int placedMines = 0;
@@ -144,19 +160,21 @@ public class MinesweeperGame extends JFrame {
     }
 
     private void uncoverCell(int i, int j) {
-        if (!buttons[i][j].isEnabled()) {
-            return;  // cell already uncovered or flagged
+    
+        if (gameEnded ||!isGameInProgress() || !buttons[i][j].isEnabled() || buttons[i][j].getText().equals("M")) {
+            return; 
         }
 
+    
         buttons[i][j].setEnabled(false);
         uncoveredCells++;
-
+    
         if (mines[i][j]) {
-            correctlyMarkedMines--;  // Decrement the count of correctly marked mines
+            correctlyMarkedMines--; 
             explodeMine(i, j);
         } else {
             if (uncoveredCells == buttons.length * buttons[0].length - totalMines) {
-                endGame(true);  // All non-mine cells uncovered, player wins
+                endGame(true, "You won.");
             } else if (surroundingMines[i][j] == 0) {
                 for (int x = Math.max(0, i - 1); x <= Math.min(buttons.length - 1, i + 1); x++) {
                     for (int y = Math.max(0, j - 1); y <= Math.min(buttons[0].length - 1, j + 1); y++) {
@@ -169,35 +187,63 @@ public class MinesweeperGame extends JFrame {
                 buttons[i][j].setText(Integer.toString(surroundingMines[i][j]));
             }
         }
+    
+        // Update the score label
+        scoreLabel.setText("Score: " + uncoveredCells);
+    }
+
+    private boolean isGameInProgress() {
+        return uncoveredCells < buttons.length * buttons[0].length - totalMines;
+    }
+    
+    
+
+    private void markMine(int i, int j) {
+        if (buttons[i][j].getText().equals("M")) {
+            correctlyMarkedMines--;  
+            buttons[i][j].setText("");
+        } else {
+            correctlyMarkedMines++;  
+            buttons[i][j].setText("M");
+        }
+
+        markIncorrectMines();
 
         // Update the score label
         scoreLabel.setText("Score: " + uncoveredCells);
     }
 
-    private void markMine(int i, int j) {
-        if (buttons[i][j].getText().equals("M")) {
-            correctlyMarkedMines--;  // Decrement the count of correctly marked mines
-            buttons[i][j].setText("");
-        } else {
-            correctlyMarkedMines++;  // Increment the count of correctly marked mines
-            buttons[i][j].setText("M");
-        }
 
-        // Update the score label
-        scoreLabel.setText("Score: " + uncoveredCells);
+    // Mark incorrect mines method
+    private void markIncorrectMines() {
+        for (int i = 0; i < buttons.length; i++) {
+            for (int j = 0; j < buttons[0].length; j++) {
+                if (buttons[i][j].getText().equals("M") && !mines[i][j]) {
+                    buttons[i][j].setText("X");
+                    buttons[i][j].setForeground(Color.RED);
+                } else if (buttons[i][j].getText().equals("") && mines[i][j]) {
+                    buttons[i][j].setText(EXPLOSION_ICONE);
+                }
+            }
+        }
     }
 
     private void explodeMine(int i, int j) {
         if (explosionSound != null) {
             explosionSound.start();
         }
+        markIncorrectMines();
 
-        buttons[i][j].setText("*");
+        buttons[i][j].setText(EXPLOSION_ICONE);
+
+        revealAllMines();
 
         disableAllButtons();
 
-        endGame(false);
+        endGame(false , "You lost.");
     }
+
+    
 
     private void disableAllButtons() {
         for (int i = 0; i < buttons.length; i++) {
@@ -207,10 +253,16 @@ public class MinesweeperGame extends JFrame {
         }
     }
 
-    private void endGame(boolean win) {
+    private void endGame(boolean win, String message) {
         timer.stop();  // Stop the timer when the game ends
-        // ... (existing code remains unchanged)
+
+        // Display a message dialog to the user
+        JOptionPane.showMessageDialog(this, message);
+        gameEnded = true;
     }
+
+
+
 
     private class CellClickListener extends MouseAdapter {
         private int i;
@@ -242,7 +294,7 @@ public class MinesweeperGame extends JFrame {
             if (secondsPlayed >= getGameDuration()) {
                 timer.stop();
                 revealAllMines();
-                endGame(false);
+                endGame(false, "Time's up! You lost.");
             } else {
                 updateTimerDisplay(secondsPlayed);
             }
@@ -251,7 +303,7 @@ public class MinesweeperGame extends JFrame {
         private int getGameDuration() {
             switch (totalMines) {
                 case BEGINNER_MINES:
-                    return 10;  // 1 minute for Beginner
+                    return 60;  // 1 minute for Beginner
                 case INTERMEDIATE_MINES:
                     return 180; // 3 minutes for Intermediate
                 case ADVANCED_MINES:
@@ -262,15 +314,46 @@ public class MinesweeperGame extends JFrame {
         }
     }
 
+
+    // private void revealAllMines() {
+    //     for (int i = 0; i < buttons.length; i++) {
+    //         for (int j = 0; j < buttons[0].length; j++) {
+    //             if (mines[i][j]) {
+    //                 explodeMine(i, j);
+    //                 // buttons[i][j].setText(EXPLOSION_ICONE);
+    //                 // buttons[i][j].setEnabled(false);
+    //             }
+    //         }
+    //     }
+    // }
+    
+
+
     private void revealAllMines() {
-        for (int i = 0; i < mines.length; i++) {
-            for (int j = 0; j < mines[0].length; j++) {
+        for (int i = 0; i < buttons.length; i++) {
+            for (int j = 0; j < buttons[0].length; j++) {
                 if (mines[i][j]) {
-                    buttons[i][j].setText("*");  
+                    if (explosionSound != null) {
+                        explosionSound.start();
+                    }
+                    if (buttons[i][j].getText().equals("")) {
+                        buttons[i][j].setText(EXPLOSION_ICONE);
+                    }
+                    buttons[i][j].setEnabled(false);
+                } else if (buttons[i][j].isEnabled()) {
+                    // If the button is not a mine, set the text indicating the number of surrounding mines
+                    int count = surroundingMines[i][j];
+                    if (count > 0) {
+                        buttons[i][j].setText(Integer.toString(count));
+                    }
+                    buttons[i][j].setEnabled(false);
                 }
             }
         }
     }
+    
+
+
 
     
 }
