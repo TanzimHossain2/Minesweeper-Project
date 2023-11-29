@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.plaf.metal.MetalButtonUI;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -21,6 +22,12 @@ public class MinesweeperGame extends JFrame {
     private int correctlyMarkedMines;
     private static final int BUTTON_SIZE = 25;
     private boolean gameEnded = false;
+    private int[] lastClickedBomb;
+
+
+    private int lastClickedBombI = -1; // Initialize with an invalid value
+    private int lastClickedBombJ = -1;
+
 
     // Board sizes and number of mines for each level
     public static final int BEGINNER_ROWS = 6;
@@ -42,6 +49,8 @@ public class MinesweeperGame extends JFrame {
     // Sound effect for exploding mines
     private final String EXPLOSION_SOUND_PATH = "../resources/explosion_sound.wav";
     private final String EXPLOSION_ICONE = "💣";
+    private final String INCORRECT_MARK_ICON = "❌"; // Use a red 'X' icon or use "X" for bold text
+
     private Clip explosionSound;
 
     public MinesweeperGame(int rows, int cols, int mines) {
@@ -187,7 +196,7 @@ public class MinesweeperGame extends JFrame {
                 buttons[i][j].setText(Integer.toString(surroundingMines[i][j]));
             }
         }
-    
+        highlightLastClickedBomb(i, j);
         // Update the score label
         scoreLabel.setText("Score: " + uncoveredCells);
     }
@@ -208,6 +217,7 @@ public class MinesweeperGame extends JFrame {
         }
 
         markIncorrectMines();
+        highlightLastClickedBomb(i, j);
 
         // Update the score label
         scoreLabel.setText("Score: " + uncoveredCells);
@@ -219,7 +229,7 @@ public class MinesweeperGame extends JFrame {
         for (int i = 0; i < buttons.length; i++) {
             for (int j = 0; j < buttons[0].length; j++) {
                 if (buttons[i][j].getText().equals("M") && !mines[i][j]) {
-                    buttons[i][j].setText("X");
+                    buttons[i][j].setText(INCORRECT_MARK_ICON);
                     buttons[i][j].setForeground(Color.RED);
                 } else if (buttons[i][j].getText().equals("") && mines[i][j]) {
                     buttons[i][j].setText(EXPLOSION_ICONE);
@@ -227,6 +237,9 @@ public class MinesweeperGame extends JFrame {
             }
         }
     }
+    
+    
+    
 
     private void explodeMine(int i, int j) {
         if (explosionSound != null) {
@@ -235,6 +248,10 @@ public class MinesweeperGame extends JFrame {
         markIncorrectMines();
 
         buttons[i][j].setText(EXPLOSION_ICONE);
+
+        // Store the coordinates of the last clicked bomb
+    lastClickedBombI = i;
+    lastClickedBombJ = j;
 
         revealAllMines();
 
@@ -303,7 +320,7 @@ public class MinesweeperGame extends JFrame {
         private int getGameDuration() {
             switch (totalMines) {
                 case BEGINNER_MINES:
-                    return 60;  // 1 minute for Beginner
+                    return 5;  // 1 minute for Beginner
                 case INTERMEDIATE_MINES:
                     return 180; // 3 minutes for Intermediate
                 case ADVANCED_MINES:
@@ -338,6 +355,7 @@ public class MinesweeperGame extends JFrame {
                     }
                     if (buttons[i][j].getText().equals("")) {
                         buttons[i][j].setText(EXPLOSION_ICONE);
+                        buttons[i][j].setForeground(Color.RED); // Set red X for incorrectly marked mines
                     }
                     buttons[i][j].setEnabled(false);
                 } else if (buttons[i][j].isEnabled()) {
@@ -350,7 +368,43 @@ public class MinesweeperGame extends JFrame {
                 }
             }
         }
+        highlightLastClickedBomb( lastClickedBombI, lastClickedBombJ);
     }
+
+    // private void highlightLastClickedBomb() {
+    //     if (lastClickedBombI != -1 && lastClickedBombJ != -1) {
+    //         buttons[lastClickedBombI][lastClickedBombJ].setBackground(Color.YELLOW); // Set your desired highlight color
+    //     }
+    // }
+    
+    private void highlightLastClickedBomb(int i, int j) {
+        if (lastClickedBomb != null) {
+            int lastClickedI = lastClickedBomb[0];
+            int lastClickedJ = lastClickedBomb[1];
+    
+            if (mines[lastClickedI][lastClickedJ] && !buttons[lastClickedI][lastClickedJ].getText().equals("M")) {
+    buttons[lastClickedI][lastClickedJ].setUI(new MetalButtonUI() {
+        protected Color getDisabledTextColor() {
+            return Color.RED;
+        }
+    });
+    buttons[lastClickedI][lastClickedJ].setText("X");
+    buttons[lastClickedI][lastClickedJ].setEnabled(false);
+}
+        }
+    
+        // Store the current clicked bomb coordinates
+        lastClickedBomb = new int[]{i, j};
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
 
 
