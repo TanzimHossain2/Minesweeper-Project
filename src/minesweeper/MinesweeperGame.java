@@ -387,7 +387,7 @@ public class MinesweeperGame extends JFrame {
                         return Color.RED;
                     }
                 });
-                buttons[lastClickedI][lastClickedJ].setText("X");
+                buttons[lastClickedI][lastClickedJ].setText(INCORRECT_MARK_ICON);
                 buttons[lastClickedI][lastClickedJ].setEnabled(false);
             }
         }
